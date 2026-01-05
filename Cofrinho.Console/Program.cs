@@ -4,11 +4,20 @@ using Cofrinho.Console.Domain.Entities;
 using Cofrinho.Console.Domain.Interfaces;
 using Cofrinho.Console.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
+using Cofrinho.Console.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
 
 var services = new ServiceCollection();
 
+services.AddDbContext<CofrinhoDbContext>(opt =>
+    opt.UseSqlite("Data Source=cofrinho.db"));
+
+//  InMemory por EF:
+services.AddScoped<IMetaRepository, EfMetaRepository>();
+
 // Repositório (Infra)
-services.AddSingleton<IMetaRepository, InMemoryMetaRepository>();
+// services.AddSingleton<IMetaRepository, InMemoryMetaRepository>();
 
 // Application Service (Use Case)
 services.AddSingleton<ICofrinhoAppService, CofrinhoAppService>();
@@ -67,10 +76,15 @@ while (true)
         }
     }
     catch (Exception ex)
-    {
-        // Console app: feedback direto. Depois evoluímos para middleware de erro na API.
-        Pausar($"Erro: {ex.Message}");
-    }
+{
+    var root = ex;
+
+    while (root.InnerException is not null)
+        root = root.InnerException;
+
+    Pausar($"Erro: {root.GetType().Name} - {root.Message}");
+}
+
 }
 
 void CriarMeta()
