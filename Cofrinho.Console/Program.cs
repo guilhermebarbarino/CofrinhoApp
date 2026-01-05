@@ -1,8 +1,23 @@
-﻿using Cofrinho.Console.Domain.Entities;
-using Cofrinho.Console.Domain.Services;
+﻿using Cofrinho.Console.Application.Interfaces;
+using Cofrinho.Console.Application.Services;
+using Cofrinho.Console.Domain.Entities;
+using Cofrinho.Console.Domain.Interfaces;
+using Cofrinho.Console.Infrastructure.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
-var service = new CofrinhoService();
-var metas = new Dictionary<string, Meta>(StringComparer.OrdinalIgnoreCase);
+var services = new ServiceCollection();
+
+// Repositório (Infra)
+services.AddSingleton<IMetaRepository, InMemoryMetaRepository>();
+
+// Application Service (Use Case)
+services.AddSingleton<ICofrinhoAppService, CofrinhoAppService>();
+
+var provider = services.BuildServiceProvider();
+
+// Resolve o contrato, não a classe concreta
+var service = provider.GetRequiredService<ICofrinhoAppService>();
+
 
 while (true)
 {
@@ -71,22 +86,17 @@ void CriarMeta()
         return;
     }
 
-    if (metas.ContainsKey(nome))
-    {
-        Pausar("Já existe uma meta com esse nome.");
-        return;
-    }
-
-    var meta = service.CriarMeta(nome);
-    metas[nome] = meta;
-
+    service.CriarMeta(nome);
     Pausar("Meta criada com sucesso.");
 }
+
 
 void ListarMetas()
 {
     Console.Clear();
     Console.WriteLine("=== Metas ===");
+
+    var metas = service.ListarMetas();
 
     if (metas.Count == 0)
     {
@@ -94,7 +104,7 @@ void ListarMetas()
         return;
     }
 
-    foreach (var meta in metas.Values.OrderBy(m => m.Nome))
+    foreach (var meta in metas)
     {
         Console.WriteLine($"- {meta.Nome} | Saldo: R$ {meta.Saldo:n2} | Transações: {meta.Transacoes.Count}");
     }
@@ -102,13 +112,14 @@ void ListarMetas()
     Pausar("Fim da lista.");
 }
 
+
 void Depositar()
 {
     Console.Clear();
     Console.WriteLine("=== Depositar ===");
 
-    var meta = SelecionarMeta();
-    if (meta is null) return;
+    var nomeMeta = SelecionarMetaNome();
+    if (nomeMeta is null) return;
 
     var valor = LerValor("Valor do depósito: ");
     if (valor is null) return;
@@ -116,17 +127,18 @@ void Depositar()
     Console.Write("Descrição (opcional): ");
     var desc = Console.ReadLine();
 
-    service.Depositar(meta, valor.Value, desc);
+    service.Depositar(nomeMeta, valor.Value, desc);
     Pausar("Depósito realizado com sucesso.");
 }
+
 
 void Sacar()
 {
     Console.Clear();
     Console.WriteLine("=== Sacar ===");
 
-    var meta = SelecionarMeta();
-    if (meta is null) return;
+    var nomeMeta = SelecionarMetaNome();
+    if (nomeMeta is null) return;
 
     var valor = LerValor("Valor do saque: ");
     if (valor is null) return;
@@ -134,19 +146,20 @@ void Sacar()
     Console.Write("Descrição (opcional): ");
     var desc = Console.ReadLine();
 
-    service.Sacar(meta, valor.Value, desc);
+    service.Sacar(nomeMeta, valor.Value, desc);
     Pausar("Saque realizado com sucesso.");
 }
+
 
 void Extrato()
 {
     Console.Clear();
     Console.WriteLine("=== Extrato ===");
 
-    var meta = SelecionarMeta();
-    if (meta is null) return;
+    var nomeMeta = SelecionarMetaNome();
+    if (nomeMeta is null) return;
 
-    var extrato = service.GerarExtrato(meta);
+    var extrato = service.GerarExtrato(nomeMeta);
 
     Console.WriteLine();
     Console.WriteLine(extrato);
@@ -154,8 +167,11 @@ void Extrato()
     Pausar("Fim do extrato.");
 }
 
-Meta? SelecionarMeta()
+
+string? SelecionarMetaNome()
 {
+    var metas = service.ListarMetas();
+
     if (metas.Count == 0)
     {
         Pausar("Nenhuma meta cadastrada. Crie uma meta primeiro.");
@@ -163,8 +179,8 @@ Meta? SelecionarMeta()
     }
 
     Console.WriteLine("Metas disponíveis:");
-    foreach (var nome in metas.Keys.OrderBy(x => x))
-        Console.WriteLine($"- {nome}");
+    foreach (var m in metas)
+        Console.WriteLine($"- {m.Nome}");
 
     Console.WriteLine();
     Console.Write("Digite o nome da meta: ");
@@ -176,14 +192,10 @@ Meta? SelecionarMeta()
         return null;
     }
 
-    if (!metas.TryGetValue(nomeMeta, out var meta))
-    {
-        Pausar("Meta não encontrada.");
-        return null;
-    }
-
-    return meta;
+    // A validação final fica no Service quando tentar usar o nome.
+    return nomeMeta;
 }
+
 
 decimal? LerValor(string label)
 {
