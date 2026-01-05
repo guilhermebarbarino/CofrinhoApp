@@ -4,13 +4,13 @@ namespace Cofrinho.Console.Domain.Entities;
 
 public class Transacao
 {
-    public int Id { get; private set; } // EF Core usa como PK
+    public int Id { get; private set; }
     public DateTime Data { get; private set; }
     public decimal Valor { get; private set; }
     public TipoTransacao Tipo { get; private set; }
     public string Descricao { get; private set; } = "-";
 
-    // Construtor para EF
+ 
     private Transacao() { }
 
     public Transacao(decimal valor, TipoTransacao tipo, string? descricao = null)

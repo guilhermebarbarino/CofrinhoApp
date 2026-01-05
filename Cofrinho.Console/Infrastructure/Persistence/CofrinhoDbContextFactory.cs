@@ -3,15 +3,13 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace Cofrinho.Console.Infrastructure.Persistence;
 
-public class CofrinhoDbContextFactory 
-    : IDesignTimeDbContextFactory<CofrinhoDbContext>
+public class CofrinhoDbContextFactory : IDesignTimeDbContextFactory<CofrinhoDbContext>
 {
     public CofrinhoDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<CofrinhoDbContext>();
-
-        optionsBuilder.UseSqlite("Data Source=cofrinho.db");
-
+        var dbPath = Path.Combine(AppContext.BaseDirectory, "cofrinho.db");
+        optionsBuilder.UseSqlite($"Data Source={dbPath}");
         return new CofrinhoDbContext(optionsBuilder.Options);
     }
 }

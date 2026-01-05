@@ -17,7 +17,6 @@ public class EfMetaRepository : IMetaRepository
     public void Add(Meta meta)
     {
         _ctx.Metas.Add(meta);
-        _ctx.SaveChanges();
     }
 
     public Meta? GetByName(string nome)

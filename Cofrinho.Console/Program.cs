@@ -1,31 +1,37 @@
 ﻿using Cofrinho.Console.Application.Interfaces;
-using Cofrinho.Console.Application.Services;
-using Cofrinho.Console.Domain.Entities;
+using Cofrinho.Console.Application.Services.UseCases;
 using Cofrinho.Console.Domain.Interfaces;
-using Cofrinho.Console.Infrastructure.Repositories;
-using Microsoft.Extensions.DependencyInjection;
 using Cofrinho.Console.Infrastructure.Persistence;
+using Cofrinho.Console.Infrastructure.Repositories;
+using Cofrinho.Console.Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 var services = new ServiceCollection();
 
+var dbPath = Path.Combine(AppContext.BaseDirectory, "cofrinho.db");
 services.AddDbContext<CofrinhoDbContext>(opt =>
-    opt.UseSqlite("Data Source=cofrinho.db"));
+    opt.UseSqlite($"Data Source={dbPath}"));
 
-//  InMemory por EF:
 services.AddScoped<IMetaRepository, EfMetaRepository>();
+services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
-// Repositório (Infra)
-// services.AddSingleton<IMetaRepository, InMemoryMetaRepository>();
-
-// Application Service (Use Case)
-services.AddSingleton<ICofrinhoAppService, CofrinhoAppService>();
+services.AddScoped<ICriarMetaUseCase, CriarMetaUseCase>();
+services.AddScoped<IDepositarUseCase, DepositarUseCase>();
+services.AddScoped<ISacarUseCase, SacarUseCase>();
+services.AddScoped<IListarMetasUseCase, ListarMetasUseCase>();
+services.AddScoped<IGerarExtratoUseCase, GerarExtratoUseCase>();
 
 var provider = services.BuildServiceProvider();
+using var scope = provider.CreateScope();
 
-// Resolve o contrato, não a classe concreta
-var service = provider.GetRequiredService<ICofrinhoAppService>();
+var criarMetaUseCase = scope.ServiceProvider.GetRequiredService<ICriarMetaUseCase>();
+var listarMetasUseCase = scope.ServiceProvider.GetRequiredService<IListarMetasUseCase>();
+var depositarUseCase = scope.ServiceProvider.GetRequiredService<IDepositarUseCase>();
+var sacarUseCase = scope.ServiceProvider.GetRequiredService<ISacarUseCase>();
+var gerarExtratoUseCase = scope.ServiceProvider.GetRequiredService<IGerarExtratoUseCase>();
+
 
 
 while (true)
@@ -48,23 +54,23 @@ while (true)
         switch (opcao)
         {
             case "1":
-                CriarMeta();
+                await CriarMetaAsync();
                 break;
 
             case "2":
-                ListarMetas();
+                await ListarMetasAsync();
                 break;
 
             case "3":
-                Depositar();
+                await DepositarAsync();
                 break;
 
             case "4":
-                Sacar();
+                await SacarAsync();
                 break;
 
             case "5":
-                Extrato();
+                await ExtratoAsync();
                 break;
 
             case "6":
@@ -76,18 +82,17 @@ while (true)
         }
     }
     catch (Exception ex)
-{
-    var root = ex;
+    {
+        var root = ex;
+        while (root.InnerException is not null)
+            root = root.InnerException;
 
-    while (root.InnerException is not null)
-        root = root.InnerException;
-
-    Pausar($"Erro: {root.GetType().Name} - {root.Message}");
+        Pausar($"Erro: {root.GetType().Name} - {root.Message}");
+    }
 }
 
-}
 
-void CriarMeta()
+async Task CriarMetaAsync()
 {
     Console.Clear();
     Console.WriteLine("=== Criar Meta ===");
@@ -100,17 +105,18 @@ void CriarMeta()
         return;
     }
 
-    service.CriarMeta(nome);
+    await criarMetaUseCase.ExecuteAsync(nome);
     Pausar("Meta criada com sucesso.");
 }
 
 
-void ListarMetas()
+
+async Task ListarMetasAsync()
 {
     Console.Clear();
     Console.WriteLine("=== Metas ===");
 
-    var metas = service.ListarMetas();
+    var metas = await listarMetasUseCase.ExecuteAsync();
 
     if (metas.Count == 0)
     {
@@ -119,20 +125,19 @@ void ListarMetas()
     }
 
     foreach (var meta in metas)
-    {
         Console.WriteLine($"- {meta.Nome} | Saldo: R$ {meta.Saldo:n2} | Transações: {meta.Transacoes.Count}");
-    }
 
     Pausar("Fim da lista.");
 }
 
 
-void Depositar()
+
+async Task DepositarAsync()
 {
     Console.Clear();
     Console.WriteLine("=== Depositar ===");
 
-    var nomeMeta = SelecionarMetaNome();
+    var nomeMeta = await SelecionarMetaNomeAsync();
     if (nomeMeta is null) return;
 
     var valor = LerValor("Valor do depósito: ");
@@ -141,17 +146,18 @@ void Depositar()
     Console.Write("Descrição (opcional): ");
     var desc = Console.ReadLine();
 
-    service.Depositar(nomeMeta, valor.Value, desc);
+    await depositarUseCase.ExecuteAsync(nomeMeta, valor.Value, desc);
     Pausar("Depósito realizado com sucesso.");
 }
 
 
-void Sacar()
+
+async Task SacarAsync()
 {
     Console.Clear();
     Console.WriteLine("=== Sacar ===");
 
-    var nomeMeta = SelecionarMetaNome();
+    var nomeMeta = await SelecionarMetaNomeAsync();
     if (nomeMeta is null) return;
 
     var valor = LerValor("Valor do saque: ");
@@ -160,31 +166,33 @@ void Sacar()
     Console.Write("Descrição (opcional): ");
     var desc = Console.ReadLine();
 
-    service.Sacar(nomeMeta, valor.Value, desc);
+    await sacarUseCase.ExecuteAsync(nomeMeta, valor.Value, desc);
     Pausar("Saque realizado com sucesso.");
 }
 
 
-void Extrato()
+
+async Task ExtratoAsync()
 {
     Console.Clear();
     Console.WriteLine("=== Extrato ===");
 
-    var nomeMeta = SelecionarMetaNome();
+    var nomeMeta = await SelecionarMetaNomeAsync();
     if (nomeMeta is null) return;
 
-    var extrato = service.GerarExtrato(nomeMeta);
+    var texto = await gerarExtratoUseCase.ExecuteAsync(nomeMeta);
 
     Console.WriteLine();
-    Console.WriteLine(extrato);
+    Console.WriteLine(texto);
 
     Pausar("Fim do extrato.");
 }
 
 
-string? SelecionarMetaNome()
+
+async Task<string?> SelecionarMetaNomeAsync()
 {
-    var metas = service.ListarMetas();
+    var metas = await listarMetasUseCase.ExecuteAsync();
 
     if (metas.Count == 0)
     {
@@ -206,9 +214,9 @@ string? SelecionarMetaNome()
         return null;
     }
 
-    // A validação final fica no Service quando tentar usar o nome.
     return nomeMeta;
 }
+
 
 
 decimal? LerValor(string label)
@@ -235,6 +243,7 @@ void Pausar(string msg)
 {
     Console.WriteLine();
     Console.WriteLine(msg);
+    Console.WriteLine("DB Path: " + Path.GetFullPath("cofrinho.db"));
     Console.WriteLine("Pressione ENTER para continuar...");
     Console.ReadLine();
 }
