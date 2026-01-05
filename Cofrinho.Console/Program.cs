@@ -6,9 +6,20 @@ using Cofrinho.Console.Infrastructure.Repositories;
 using Cofrinho.Console.Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 var services = new ServiceCollection();
+
+services.AddLogging(cfg =>
+{
+    cfg.ClearProviders();
+    cfg.AddConsole();
+    cfg.SetMinimumLevel(LogLevel.Information);
+});
+
+var correlationId = Guid.NewGuid().ToString("N");
+
 
 var dbPath = Path.Combine(AppContext.BaseDirectory, "cofrinho.db");
 services.AddDbContext<CofrinhoDbContext>(opt =>
@@ -31,6 +42,9 @@ var listarMetasUseCase = scope.ServiceProvider.GetRequiredService<IListarMetasUs
 var depositarUseCase = scope.ServiceProvider.GetRequiredService<IDepositarUseCase>();
 var sacarUseCase = scope.ServiceProvider.GetRequiredService<ISacarUseCase>();
 var gerarExtratoUseCase = scope.ServiceProvider.GetRequiredService<IGerarExtratoUseCase>();
+var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+    .CreateLogger("Cofrinho.Console");
+
 
 
 
@@ -83,11 +97,17 @@ while (true)
     }
     catch (Exception ex)
     {
-        var root = ex;
-        while (root.InnerException is not null)
-            root = root.InnerException;
+        logger.LogError(ex, "Erro no fluxo. CorrelationId={CorrelationId}", correlationId);
 
-        Pausar($"Erro: {root.GetType().Name} - {root.Message}");
+        var msg = ex switch
+        {
+            ArgumentException => ex.Message,
+            InvalidOperationException => ex.Message,
+            KeyNotFoundException => ex.Message,
+            _ => "Ocorreu um erro inesperado."
+        };
+
+        Pausar($"Erro: {msg}");
     }
 }
 
