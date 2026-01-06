@@ -17,4 +17,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
 </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cofrinho.Application\Cofrinho.Application.csproj" />
+    <ProjectReference Include="..\Cofrinho.Infrastructure\Cofrinho.Infrastructure.csproj" />
+  </ItemGroup>
 </Project>

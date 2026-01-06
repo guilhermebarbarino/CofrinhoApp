@@ -1,5 +1,8 @@
 ﻿namespace Cofrinho.Api.Contracts
 {
-    public record CreateMetaRequest(string Nome);
+    public sealed class CreateMetaRequest
+    {
+        public string Nome { get; set; } = string.Empty;
+    }
 
 }

@@ -1,4 +1,10 @@
-﻿namespace Cofrinho.Api.Contracts
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Cofrinho.Api.Contracts
 {
-    public record TransacaoRequest(decimal Valor, string? Descricao);
+    public sealed class TransacaoRequest
+    {
+        public decimal Valor { get; set; }
+        public string Descricao { get; set; }= string.Empty;
+    }
 }

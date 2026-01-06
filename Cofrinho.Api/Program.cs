@@ -1,9 +1,14 @@
-using Cofrinho.Console.Application.Interfaces;
+
+using Cofrinho.Application.Interfaces;
+using Cofrinho.Application.Services.UseCases;
+using Cofrinho.Application.UseCases;
 using Cofrinho.Console.Application.Services.UseCases;
-using Cofrinho.Console.Domain.Interfaces;
-using Cofrinho.Console.Infrastructure.Persistence;
-using Cofrinho.Console.Infrastructure.Repositories;
-using Cofrinho.Console.Infrastructure.UnitOfWork;
+using Cofrinho.Domain.Interfaces;
+using Cofrinho.Infrastructure.Persistence;
+using Cofrinho.Infrastructure.Repositories;
+using Cofrinho.Infrastructure.UnitOfWork;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,8 +32,15 @@ builder.Services.AddScoped<IDepositarUseCase, DepositarUseCase>();
 builder.Services.AddScoped<ISacarUseCase, SacarUseCase>();
 builder.Services.AddScoped<IListarMetasUseCase, ListarMetasUseCase>();
 builder.Services.AddScoped<IGerarExtratoUseCase, GerarExtratoUseCase>();
+builder.Services.AddScoped<IGerarExtratoGeralUseCase, GerarExtratoGeralUseCase>();
+builder.Services.AddScoped<IObterMetaPorNomeUseCase, ObterMetaPorNomeUseCase>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
+
+app.UseMiddleware<Cofrinho.Api.Middlewares.GlobalExceptionMiddleware>();
+
 
 if (app.Environment.IsDevelopment())
 {

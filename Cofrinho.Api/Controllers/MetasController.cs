@@ -1,5 +1,5 @@
 ﻿using Cofrinho.Api.Contracts;
-using Cofrinho.Console.Application.Interfaces;
+using Cofrinho.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cofrinho.Api.Controllers;
@@ -8,62 +8,83 @@ namespace Cofrinho.Api.Controllers;
 [Route("api/metas")]
 public class MetasController : ControllerBase
 {
-    private readonly ICriarMetaUseCase _criarMeta;
-    private readonly IListarMetasUseCase _listarMetas;
-    private readonly IDepositarUseCase _depositar;
-    private readonly ISacarUseCase _sacar;
-    private readonly IGerarExtratoUseCase _extrato;
-
-    public MetasController(
-        ICriarMetaUseCase criarMeta,
-        IListarMetasUseCase listarMetas,
-        IDepositarUseCase depositar,
-        ISacarUseCase sacar,
-        IGerarExtratoUseCase extrato)
-    {
-        _criarMeta = criarMeta;
-        _listarMetas = listarMetas;
-        _depositar = depositar;
-        _sacar = sacar;
-        _extrato = extrato;
-    }
-
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateMetaRequest req, CancellationToken ct)
+    public async Task<IActionResult> Criar(
+        [FromServices] ICriarMetaUseCase useCase,
+        [FromBody] CreateMetaRequest request,
+        CancellationToken ct)
     {
-        await _criarMeta.ExecuteAsync(req.Nome, ct);
-        return CreatedAtAction(nameof(GetAll), null);
+        await useCase.ExecuteAsync(request.Nome, ct);
+
+        return CreatedAtAction(
+            nameof(ObterPorNome),
+            new { nome = request.Nome },
+            new CreateMetaResponse("Meta criada com sucesso"));
     }
+
+    [HttpGet("{nome}")]
+    public async Task<ActionResult<MetaResponse>> ObterPorNome(
+    [FromServices] IObterMetaPorNomeUseCase useCase,
+    [FromRoute] string nome,
+    CancellationToken ct)
+    {
+        var meta = await useCase.ExecuteAsync(nome, ct);
+        return Ok(new MetaResponse(meta.Nome, meta.Saldo));
+    }
+
 
     [HttpGet]
-    public async Task<ActionResult<List<MetaResponse>>> GetAll(CancellationToken ct)
+    public async Task<IActionResult> Listar(
+        [FromServices] IListarMetasUseCase useCase,
+        CancellationToken ct)
     {
-        var metas = await _listarMetas.ExecuteAsync(ct);
-        var result = metas
-            .Select(m => new MetaResponse(m.Nome, m.Saldo, m.Transacoes.Count))
-            .ToList();
+        var metas = await useCase.ExecuteAsync(ct);
 
-        return Ok(result);
+        return Ok(metas.Select(m => new
+        {
+            m.Nome,
+            m.Saldo,
+            Transacoes = m.Transacoes.Count
+        }));
     }
 
     [HttpPost("{nome}/deposito")]
-    public async Task<IActionResult> Depositar(string nome, [FromBody] TransacaoRequest req, CancellationToken ct)
+    public async Task<IActionResult> Depositar(
+        [FromServices] IDepositarUseCase useCase,
+        [FromRoute] string nome,
+        [FromBody] TransacaoRequest request,
+        CancellationToken ct)
     {
-        await _depositar.ExecuteAsync(nome, req.Valor, req.Descricao, ct);
-        return Ok();
+        await useCase.ExecuteAsync(nome, request.Valor, request.Descricao, ct);
+        return Ok(new TransacaoResponse("Depósito efetuado com sucesso!"));
     }
 
     [HttpPost("{nome}/saque")]
-    public async Task<IActionResult> Sacar(string nome, [FromBody] TransacaoRequest req, CancellationToken ct)
+    public async Task<IActionResult> Sacar(
+        [FromServices] ISacarUseCase useCase,
+        [FromRoute] string nome,
+        [FromBody] TransacaoRequest request,
+        CancellationToken ct)
     {
-        await _sacar.ExecuteAsync(nome, req.Valor, req.Descricao, ct);
-        return Ok();
+        await useCase.ExecuteAsync(nome, request.Valor, request.Descricao, ct);
+        return Ok(new TransacaoResponse("Saque realizado com sucesso!"));
     }
 
-    [HttpGet("{nome}/extrato")]
-    public async Task<ActionResult<string>> Extrato(string nome, CancellationToken ct)
+    [HttpGet("/api/extrato")]
+    public async Task<IActionResult> Extrato(
+        [FromServices] IGerarExtratoUseCase extratoUseCase,
+        [FromServices] IGerarExtratoGeralUseCase extratoGeralUseCase,
+        [FromQuery] string? nome,
+        CancellationToken ct)
     {
-        var texto = await _extrato.ExecuteAsync(nome, ct);
-        return Ok(texto);
+        // Ideal: validar também esse "nome" (query) via DTO/Validator.
+        if (!string.IsNullOrWhiteSpace(nome))
+        {
+            var texto = await extratoUseCase.ExecuteAsync(nome.Trim(), ct);
+            return Ok(texto);
+        }
+
+        var geral = await extratoGeralUseCase.ExecuteAsync(ct);
+        return Ok(geral);
     }
 }
