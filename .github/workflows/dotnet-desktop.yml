@@ -14,10 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
+      - name: Setup .NET 6
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "6.0.x"
 
       - name: Restore
         run: dotnet restore
@@ -27,13 +27,3 @@ jobs:
 
       - name: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
-
-      # Opcional: gerar artefato publicado (útil se depois você for fazer deploy)
-      - name: Publish
-        run: dotnet publish ./src/SuaApi/SuaApi.csproj -c Release -o out
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-publish
-          path: out
