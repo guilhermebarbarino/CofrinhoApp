@@ -1,46 +1,26 @@
-
-using Cofrinho.Application.Interfaces;
-using Cofrinho.Application.Services.UseCases;
-using Cofrinho.Application.UseCases;
-using Cofrinho.Console.Application.Services.UseCases;
-using Cofrinho.Domain.Interfaces;
-using Cofrinho.Infrastructure.Persistence;
-using Cofrinho.Infrastructure.Repositories;
-using Cofrinho.Infrastructure.UnitOfWork;
+using Cofrinho.Application;
+using Cofrinho.Infrastructure;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers + Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var conn = builder.Configuration.GetConnectionString("CofrinhoDb");
-
-// DB
-builder.Services.AddDbContext<CofrinhoDbContext>(opt => opt.UseSqlite(conn));
-
-// Infra
-builder.Services.AddScoped<IMetaRepository, EfMetaRepository>();
-builder.Services.AddScoped<IUnitOfWork, EfUnitOfWork>();
-
-// UseCases
-builder.Services.AddScoped<ICriarMetaUseCase, CriarMetaUseCase>();
-builder.Services.AddScoped<IDepositarUseCase, DepositarUseCase>();
-builder.Services.AddScoped<ISacarUseCase, SacarUseCase>();
-builder.Services.AddScoped<IListarMetasUseCase, ListarMetasUseCase>();
-builder.Services.AddScoped<IGerarExtratoUseCase, GerarExtratoUseCase>();
-builder.Services.AddScoped<IGerarExtratoGeralUseCase, GerarExtratoGeralUseCase>();
-builder.Services.AddScoped<IObterMetaPorNomeUseCase, ObterMetaPorNomeUseCase>();
+// FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Camadas
+builder.Services.AddApplication();
+
+var conn = builder.Configuration.GetConnectionString("CofrinhoDb")!;
+builder.Services.AddInfrastructure(conn);
+
 var app = builder.Build();
-
-app.UseMiddleware<Cofrinho.Api.Middlewares.GlobalExceptionMiddleware>();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -48,11 +28,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<Cofrinho.Api.Middlewares.GlobalExceptionMiddleware>();
 app.MapControllers();
 
+// (opcional) garantir DB criado, se você ainda estiver com EnsureCreated
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<CofrinhoDbContext>();
+    var db = scope.ServiceProvider.GetRequiredService<Cofrinho.Infrastructure.Persistence.CofrinhoDbContext>();
     db.Database.EnsureCreated();
 }
 
