@@ -1,8 +1,7 @@
-using Cofrinho.Console.Application.Services;
-using Cofrinho.Console.Domain.Entities;
-using Cofrinho.Console.Domain.Interfaces;
+using Cofrinho.Application.Services;
+using Cofrinho.Domain.Entities;
+using Cofrinho.Domain.Interfaces;
 using Moq;
-using Xunit;
 
 namespace Cofrinho.Tests.Application;
 

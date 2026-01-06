@@ -23,7 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cofrinho.Console\Cofrinho.Console.csproj" />
+    <ProjectReference Include="..\Cofrinho.Api\Cofrinho.Api.csproj" />
+    <ProjectReference Include="..\Cofrinho.Application\Cofrinho.Application.csproj" />
+    <ProjectReference Include="..\Cofrinho.Domain\Cofrinho.Domain.csproj" />
+    <ProjectReference Include="..\Cofrinho.Infrastructure\Cofrinho.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
