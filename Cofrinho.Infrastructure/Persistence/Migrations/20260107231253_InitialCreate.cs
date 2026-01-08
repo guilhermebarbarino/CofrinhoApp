@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Cofrinho.Console.Migrations
+namespace Cofrinho.Infrastructure.Persistence.Migrations
 {
     public partial class InitialCreate : Migration
     {
