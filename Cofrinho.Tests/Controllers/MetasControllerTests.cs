@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Cofrinho.Api.Controllers;
+﻿using Cofrinho.Api.Controllers;
 using Cofrinho.Api.Contracts;
 using Cofrinho.Application.Interfaces;
 using Cofrinho.Domain.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Xunit;
 
 public class MetasControllerTests
 {

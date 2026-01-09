@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Cofrinho.Application.UseCases;
+﻿using Cofrinho.Application.UseCases;
 using Cofrinho.Domain.Entities;
 using Cofrinho.Domain.Enums;
 using Cofrinho.Domain.Interfaces;
 using Cofrinho.Domain.Utils;
 using FluentAssertions;
 using Moq;
-using Xunit;
 
 public class GerarExtratoUseCaseTests
 {

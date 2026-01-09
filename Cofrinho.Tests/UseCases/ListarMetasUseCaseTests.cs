@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Cofrinho.Application.UseCases;
+﻿using Cofrinho.Application.UseCases;
 using Cofrinho.Domain.Entities;
 using Cofrinho.Domain.Interfaces;
 using FluentAssertions;
 using Moq;
-using Xunit;
 
 public class ListarMetasUseCaseTests
 {

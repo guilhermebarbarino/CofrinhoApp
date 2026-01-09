@@ -3,7 +3,6 @@ using Cofrinho.Api.Validation;
 using Cofrinho.Domain.Utils;
 using FluentAssertions;
 using FluentValidation.TestHelper;
-using Xunit;
 
 public class CreateMetaRequestValidatorTests
 {

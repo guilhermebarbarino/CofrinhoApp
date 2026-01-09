@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Cofrinho.Application.Services.UseCases;
+﻿using Cofrinho.Application.Services.UseCases;
 using Cofrinho.Domain.Entities;
 using Cofrinho.Domain.Interfaces;
 using Cofrinho.Domain.Utils;
 using FluentAssertions;
 using Moq;
-using Xunit;
 
 public class ObterMetaPorNomeUseCaseTests
 {
