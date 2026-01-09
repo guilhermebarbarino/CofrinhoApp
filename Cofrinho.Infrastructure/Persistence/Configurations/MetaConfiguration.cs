@@ -1,8 +1,11 @@
 using Cofrinho.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Infrastructure.Persistence.Configurations;
+
+[ExcludeFromCodeCoverage]
 
 public class MetaConfiguration : IEntityTypeConfiguration<Meta>
 {

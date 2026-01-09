@@ -2,8 +2,11 @@ using Cofrinho.Domain.Entities;
 using Cofrinho.Domain.Interfaces;
 using Cofrinho.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Infrastructure.Repositories;
+
+[ExcludeFromCodeCoverage]
 
 public class EfMetaRepository : IMetaRepository
 {

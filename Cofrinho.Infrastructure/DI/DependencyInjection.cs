@@ -4,8 +4,11 @@ using Cofrinho.Infrastructure.Repositories;
 using Cofrinho.Infrastructure.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Infrastructure;
+
+[ExcludeFromCodeCoverage]
 
 public static class DependencyInjection
 {

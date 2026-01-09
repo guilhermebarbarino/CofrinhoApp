@@ -1,7 +1,10 @@
 using Cofrinho.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Infrastructure.Persistence;
+
+[ExcludeFromCodeCoverage]
 
 public class CofrinhoDbContext : DbContext
 {

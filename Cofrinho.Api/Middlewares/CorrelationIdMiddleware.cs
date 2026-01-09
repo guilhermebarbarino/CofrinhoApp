@@ -1,6 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Api.Middlewares;
+
+[ExcludeFromCodeCoverage]
 
 public sealed class CorrelationIdMiddleware
 {

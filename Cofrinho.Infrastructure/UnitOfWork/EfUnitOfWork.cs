@@ -1,7 +1,10 @@
 using Cofrinho.Infrastructure.Persistence;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Infrastructure.UnitOfWork
 {
+    [ExcludeFromCodeCoverage]
+
     public class EfUnitOfWork : IUnitOfWork
     {
         private readonly CofrinhoDbContext _ctx;

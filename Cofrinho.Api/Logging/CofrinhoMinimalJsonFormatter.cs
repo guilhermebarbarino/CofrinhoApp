@@ -1,9 +1,11 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Serilog.Events;
 using Serilog.Formatting;
 
 namespace Cofrinho.Api.Logging;
 
+[ExcludeFromCodeCoverage]
 public sealed class CofrinhoMinimalJsonFormatter : ITextFormatter
 {
     public void Format(LogEvent logEvent, TextWriter output)

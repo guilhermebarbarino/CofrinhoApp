@@ -3,8 +3,11 @@ using Cofrinho.Application.Services.UseCases;
 using Cofrinho.Application.UseCases;
 using Cofrinho.Console.Application.Services.UseCases;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Application;
+
+[ExcludeFromCodeCoverage]
 
 public static class DependencyInjection
 {

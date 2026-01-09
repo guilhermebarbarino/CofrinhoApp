@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Infrastructure.Persistence;
+
+[ExcludeFromCodeCoverage]
 
 public sealed class CofrinhoDbContextFactory : IDesignTimeDbContextFactory<CofrinhoDbContext>
 {

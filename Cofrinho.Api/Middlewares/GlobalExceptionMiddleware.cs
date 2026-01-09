@@ -1,8 +1,10 @@
 ﻿namespace Cofrinho.Api.Middlewares
 {
-    using System.Net;
     using Microsoft.AspNetCore.Mvc;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Net;
 
+    [ExcludeFromCodeCoverage]
     public sealed class GlobalExceptionMiddleware
     {
         private readonly RequestDelegate _next;

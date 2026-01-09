@@ -1,7 +1,10 @@
 using Cofrinho.Domain.Entities;
 using Cofrinho.Domain.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Cofrinho.Infrastructure.Repositories;
+
+[ExcludeFromCodeCoverage]
 
 public class InMemoryMetaRepository : IMetaRepository
 {

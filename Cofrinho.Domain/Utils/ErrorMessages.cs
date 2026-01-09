@@ -1,5 +1,9 @@
-﻿namespace Cofrinho.Domain.Utils
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace Cofrinho.Domain.Utils
 {
+    [ExcludeFromCodeCoverage]
+
     public static class ErrorMessages
     {
         public const string NomeMetaObrigatorio = "Nome da meta é obrigatório.";
