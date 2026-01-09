@@ -1,11 +1,14 @@
+using Cofrinho.Api.Logging;
 using Cofrinho.Api.Middlewares;
 using Cofrinho.Application;
 using Cofrinho.Infrastructure;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Serilog;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using Cofrinho.Api.Logging;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Serilog;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
@@ -38,6 +41,17 @@ var apiDir = builder.Environment.ContentRootPath;
 var dbPath = Path.Combine(apiDir, "cofrinho.api.db");
 builder.Services.AddInfrastructure($"Data Source={dbPath}");
 
+builder.Services.AddHealthChecks()
+    // Readiness: valida se consegue abrir o banco
+    .AddDbContextCheck<Cofrinho.Infrastructure.Persistence.CofrinhoDbContext>(
+        name: "db",
+        failureStatus: Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Unhealthy,
+        tags: new[] { "ready" })
+    // Liveness: sempre OK se o processo está rodando
+    .AddCheck("live", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(),
+        tags: new[] { "live" });
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -62,4 +76,36 @@ using (var scope = app.Services.CreateScope())
         db.Database.Migrate();
 }
 
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = r => r.Tags.Contains("live"),
+    ResponseWriter = WriteHealthResponse
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = r => r.Tags.Contains("ready"),
+    ResponseWriter = WriteHealthResponse
+});
+
+
 app.Run();
+
+
+static Task WriteHealthResponse(HttpContext context, HealthReport report)
+{
+    context.Response.ContentType = "application/json";
+
+    var payload = new
+    {
+        status = report.Status.ToString(),
+        checks = report.Entries.Select(e => new
+        {
+            name = e.Key,
+            status = e.Value.Status.ToString(),
+            durationMs = e.Value.Duration.TotalMilliseconds
+        })
+    };
+
+    return context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+}
