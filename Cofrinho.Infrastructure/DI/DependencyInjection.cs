@@ -15,7 +15,7 @@ public static class DependencyInjection
 
         services.AddScoped<IMetaRepository, EfMetaRepository>();
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
-
+     
         return services;
     }
 }
