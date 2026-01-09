@@ -1,6 +1,7 @@
 ﻿using Cofrinho.Application.Interfaces;
 using Cofrinho.Domain.Enums;
 using Cofrinho.Domain.Interfaces;
+using System.Globalization;
 using System.Text;
 
 namespace Cofrinho.Console.Application.Services.UseCases;
@@ -8,6 +9,7 @@ namespace Cofrinho.Console.Application.Services.UseCases;
 public sealed class GerarExtratoGeralUseCase : IGerarExtratoGeralUseCase
 {
     private readonly IMetaRepository _repo;
+    private static readonly CultureInfo PtBr = new("pt-BR");
 
     public GerarExtratoGeralUseCase(IMetaRepository repo)
     {
@@ -16,7 +18,6 @@ public sealed class GerarExtratoGeralUseCase : IGerarExtratoGeralUseCase
 
     public async Task<string> ExecuteAsync(CancellationToken ct = default)
     {
-        
         var metas = _repo.GetAll();
 
         if (metas is null || metas.Count == 0)
@@ -30,7 +31,7 @@ public sealed class GerarExtratoGeralUseCase : IGerarExtratoGeralUseCase
         foreach (var meta in metas.OrderBy(m => m.Nome))
         {
             sb.AppendLine($"--- {meta.Nome} ---");
-            sb.AppendLine($"Saldo: R$ {meta.Saldo:n2}");
+            sb.AppendLine($"Saldo: {meta.Saldo.ToString("C2", PtBr)}");
 
             if (meta.Transacoes.Count == 0)
             {
@@ -42,8 +43,11 @@ public sealed class GerarExtratoGeralUseCase : IGerarExtratoGeralUseCase
             foreach (var t in meta.Transacoes.OrderBy(x => x.Data))
             {
                 var tipo = t.Tipo == TipoTransacao.Deposito ? "DEP" : "SAQ";
-                var sinal = t.Tipo.ToString() == "Deposito" ? "+" : "-";
-                sb.AppendLine($"{t.Data:dd/MM HH:mm} | {tipo} | {sinal}R$ {t.Valor:n2} | {t.Descricao}");
+                var sinal = t.Tipo == TipoTransacao.Deposito ? "+" : "-";
+
+                sb.AppendLine(
+                    $"{t.Data:dd/MM HH:mm} | {tipo} | {sinal}{t.Valor.ToString("C2", PtBr)} | {t.Descricao}"
+                );
             }
 
             sb.AppendLine();
